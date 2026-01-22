@@ -11,16 +11,24 @@ export const AuthProvider = ({ children }) => {
         // Check for preserved session
         const loadStorageData = async () => {
             try {
-                // Temporary reset logic for admin password
+                // Initialize default admin if not exists
                 const storedUsers = await AsyncStorage.getItem('@all_users');
-                if (storedUsers) {
-                    let users = JSON.parse(storedUsers);
-                    const adminIdx = users.findIndex(u => u.email.toLowerCase() === 'admin@vau.ac.lk');
-                    if (adminIdx !== -1) {
-                        users[adminIdx].password = 'Admin123456';
-                        await AsyncStorage.setItem('@all_users', JSON.stringify(users));
-                        console.log('Admin password has been reset to: Admin123456');
-                    }
+                let users = storedUsers ? JSON.parse(storedUsers) : [];
+
+                const adminEmail = 'admin@vau.ac.lk';
+                const hasAdmin = users.some(u => u.email.toLowerCase() === adminEmail.toLowerCase());
+
+                if (!hasAdmin) {
+                    const defaultAdmin = {
+                        id: 'admin_1',
+                        name: 'System Admin',
+                        email: adminEmail,
+                        password: 'Admin123',
+                        role: 'admin',
+                        image: null
+                    };
+                    users.push(defaultAdmin);
+                    await AsyncStorage.setItem('@all_users', JSON.stringify(users));
                 }
 
                 const storedUser = await AsyncStorage.getItem('@user');

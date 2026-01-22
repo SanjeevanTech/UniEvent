@@ -227,7 +227,7 @@ const ProfileScreen = () => {
                         icon="information-circle-outline"
                         title="App Version"
                         type="button"
-                        onPress={() => Alert.alert("About", "UniEvent v1.0.0\nDeveloped for University of Vavuniya")}
+                        onPress={() => Alert.alert("About", "UniEvent v1.0.0\nDeveloped for Group 2")}
                     />
                 </View>
 
@@ -255,7 +255,7 @@ const ProfileScreen = () => {
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.versionText}>Made with ❤️ for Vavuniya Students</Text>
+                <Text style={styles.versionText}>Made with ❤️ for Group 2 Students</Text>
             </ScrollView>
 
             {/* Edit Profile Modal remains the same */}
