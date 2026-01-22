@@ -11,7 +11,10 @@ import {
     Alert,
     Switch,
     FlatList,
-    Platform
+    Platform,
+    KeyboardAvoidingView,
+    TouchableWithoutFeedback,
+    Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -153,9 +156,9 @@ const ProfileScreen = () => {
         </View>
     );
 
-    const SettingItem = ({ icon, title, value, onValueChange, type = 'toggle', onPress }) => (
+    const SettingItem = ({ icon, title, value, onValueChange, type = 'toggle', onPress, style }) => (
         <TouchableOpacity
-            style={[styles.settingItem, { borderBottomColor: theme.colors.border }]}
+            style={[styles.settingItem, { borderBottomColor: theme.colors.border }, style]}
             onPress={onPress}
             disabled={type === 'toggle'}
         >
@@ -240,6 +243,7 @@ const ProfileScreen = () => {
                         title="Edit Profile"
                         type="button"
                         onPress={() => setEditModalVisible(true)}
+                        style={{ marginTop: 10 }}
                     />
                     <SettingItem
                         icon="shield-checkmark-outline"
@@ -268,55 +272,65 @@ const ProfileScreen = () => {
                 onRequestClose={() => setEditModalVisible(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Edit Profile</Text>
-                            <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                                <Ionicons name="close" size={24} color={theme.colors.text} />
-                            </TouchableOpacity>
-                        </View>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                        style={{ width: '100%' }}
+                    >
+                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                            <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Edit Profile</Text>
+                                    <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                                        <Ionicons name="close" size={24} color={theme.colors.text} />
+                                    </TouchableOpacity>
+                                </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Full Name</Text>
-                            <TextInput
-                                style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
-                                value={editedName}
-                                onChangeText={setEditedName}
-                                placeholder="Enter your name"
-                                placeholderTextColor={theme.colors.textSecondary}
-                            />
-                        </View>
+                                <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Full Name</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+                                            value={editedName}
+                                            onChangeText={setEditedName}
+                                            placeholder="Enter your name"
+                                            placeholderTextColor={theme.colors.textSecondary}
+                                        />
+                                    </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Email Address</Text>
-                            <TextInput
-                                style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
-                                value={editedEmail}
-                                onChangeText={setEditedEmail}
-                                placeholder="Enter your email"
-                                keyboardType="email-address"
-                                placeholderTextColor={theme.colors.textSecondary}
-                            />
-                        </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Email Address</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+                                            value={editedEmail}
+                                            onChangeText={setEditedEmail}
+                                            placeholder="Enter your email"
+                                            keyboardType="email-address"
+                                            placeholderTextColor={theme.colors.textSecondary}
+                                        />
+                                    </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Profile Image URL</Text>
-                            <TextInput
-                                style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
-                                value={editedImage}
-                                onChangeText={setEditedImage}
-                                placeholder="https://example.com/image.jpg"
-                                placeholderTextColor={theme.colors.textSecondary}
-                            />
-                        </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Profile Image URL</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+                                            value={editedImage}
+                                            onChangeText={setEditedImage}
+                                            placeholder="https://example.com/image.jpg"
+                                            placeholderTextColor={theme.colors.textSecondary}
+                                        />
+                                    </View>
 
-                        <TouchableOpacity
-                            style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
-                            onPress={handleUpdateProfile}
-                        >
-                            <Text style={styles.saveButtonText}>Save Changes</Text>
-                        </TouchableOpacity>
-                    </View>
+                                    <TouchableOpacity
+                                        style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+                                        onPress={handleUpdateProfile}
+                                    >
+                                        <Text style={styles.saveButtonText}>Save Changes</Text>
+                                    </TouchableOpacity>
+                                </ScrollView>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </KeyboardAvoidingView>
                 </View>
             </Modal>
             {/* Joined Events Modal */}
@@ -596,12 +610,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-end',
+        paddingTop: 60, // Ensures modal never hits the very top
     },
     modalContent: {
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         padding: 24,
+        paddingTop: 30,
         paddingBottom: 40,
+        maxHeight: '100%', // Allow it to be flexible but respect overlay padding
     },
     modalHeader: {
         flexDirection: 'row',

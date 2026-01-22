@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "UniEvent",
-    "slug": "UniEvent",
+    "slug": "unievent",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
@@ -31,9 +31,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "fdc9992a-e71e-4ade-9922-d477710edcce"
+        "projectId": "fedc36ea-8851-402d-8cf4-a44478b32ab6"
       }
     },
-    "owner": "test2006"
+    "owner": "san2000"
   }
 }
