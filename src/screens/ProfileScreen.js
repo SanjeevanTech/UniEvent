@@ -107,15 +107,17 @@ const ProfileScreen = () => {
         <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
             <View style={styles.profileContainer}>
                 <View style={[styles.avatarContainer, { borderColor: theme.colors.primary }]}>
-                    {user?.image ? (
-                        <Image source={{ uri: user.image }} style={styles.avatar} />
-                    ) : (
-                        <View style={[styles.initialAvatar, { backgroundColor: theme.colors.primary }]}>
-                            <Text style={styles.initialText}>
-                                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                            </Text>
-                        </View>
-                    )}
+                    <View style={styles.imageWrapper}>
+                        {user?.image ? (
+                            <Image source={{ uri: user.image }} style={styles.avatar} resizeMode="cover" />
+                        ) : (
+                            <View style={[styles.initialAvatar, { backgroundColor: theme.colors.primary }]}>
+                                <Text style={styles.initialText}>
+                                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                     <TouchableOpacity
                         style={[styles.editBadge, { backgroundColor: theme.colors.primary }]}
                         onPress={() => setEditModalVisible(true)}
@@ -398,18 +400,29 @@ const styles = StyleSheet.create({
         height: 100,
         borderRadius: 50,
         borderWidth: 3,
-        padding: 3,
+        padding: 2, // Space between border and image
         position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    imageWrapper: {
+        width: 90, // Fixed numeric dimension for mobile
+        height: 90,
+        borderRadius: 45,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#E1E1E1',
     },
     avatar: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 50,
+        width: 90,
+        height: 90,
+        backgroundColor: '#E1E1E1',
     },
     initialAvatar: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 50,
+        width: 90,
+        height: 90,
+        borderRadius: 45,
         justifyContent: 'center',
         alignItems: 'center',
     },
