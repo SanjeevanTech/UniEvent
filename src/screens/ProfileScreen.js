@@ -107,7 +107,7 @@ const ProfileScreen = () => {
     };
 
     const renderHeader = () => (
-        <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
             <View style={styles.profileContainer}>
                 <View style={[styles.avatarContainer, { borderColor: theme.colors.primary }]}>
                     <View style={styles.imageWrapper}>
@@ -261,7 +261,7 @@ const ProfileScreen = () => {
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.versionText}>Made with ❤️ for Group 2 Students</Text>
+                <Text style={styles.versionText}>Made with for Group 2 Students</Text>
             </ScrollView>
 
             {/* Edit Profile Modal remains the same */}
@@ -278,15 +278,19 @@ const ProfileScreen = () => {
                         style={{ width: '100%' }}
                     >
                         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                            <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
-                                <View style={styles.modalHeader}>
-                                    <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Edit Profile</Text>
-                                    <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                                        <Ionicons name="close" size={24} color={theme.colors.text} />
+                            <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+                                <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+                                    <Text style={[styles.modalTitle, { color: theme.colors.primary }]}>Edit Profile</Text>
+                                    <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.closeButton}>
+                                        <Ionicons name="close" size={28} color={theme.colors.text} />
                                     </TouchableOpacity>
                                 </View>
 
-                                <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                                <ScrollView
+                                    showsVerticalScrollIndicator={false}
+                                    bounces={false}
+                                    contentContainerStyle={styles.modalScrollContent}
+                                >
                                     <View style={styles.inputGroup}>
                                         <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Full Name</Text>
                                         <TextInput
@@ -615,16 +619,23 @@ const styles = StyleSheet.create({
     modalContent: {
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
-        padding: 24,
-        paddingTop: 30,
-        paddingBottom: 40,
-        maxHeight: '100%', // Allow it to be flexible but respect overlay padding
+        overflow: 'hidden',
+        maxHeight: '100%',
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 24,
+        paddingHorizontal: 24,
+        paddingVertical: 20,
+        borderBottomWidth: 1,
+    },
+    modalScrollContent: {
+        padding: 24,
+        paddingBottom: 40,
+    },
+    closeButton: {
+        padding: 4,
     },
     modalTitle: {
         fontSize: 20,

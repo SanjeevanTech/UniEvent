@@ -294,6 +294,7 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 24,
         height: '60%',
         padding: 24,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 30, // Extra space for navigation bar
     },
     trayHeader: {
         flexDirection: 'row',
@@ -338,6 +339,7 @@ const styles = StyleSheet.create({
     },
     clearAllButton: {
         marginTop: 10,
+        marginBottom: Platform.OS === 'ios' ? 10 : 20, // Extra margin for the bottom
         padding: 16,
         alignItems: 'center',
     },
