@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     View,
     Text,
@@ -11,7 +11,6 @@ import {
     Alert,
     Switch,
     FlatList,
-    Platform,
     KeyboardAvoidingView,
     TouchableWithoutFeedback,
     Keyboard
@@ -23,7 +22,6 @@ import { useEvents } from '../context/EventContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-const DEFAULT_IMAGE = require('../../assets/images/default_event.png');
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
@@ -273,8 +271,8 @@ const ProfileScreen = () => {
             >
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
-                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                        behavior='padding'
+                        keyboardVerticalOffset={20}
                         style={{ width: '100%' }}
                     >
                         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -612,7 +610,8 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(212, 207, 207, 0.5)',
+        borderRadius: 20,
         justifyContent: 'flex-end',
         paddingTop: 60, // Ensures modal never hits the very top
     },

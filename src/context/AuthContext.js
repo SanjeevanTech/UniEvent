@@ -1,49 +1,46 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AuthContext = createContext();
+const defaultAdmin = {
+    id: 'admin',
+    name: 'System Admin',
+    email: 'admin@vau.ac.lk',
+    password: 'Admin123',
+    role: 'admin',
+    image: null
+};
+
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for preserved session
-        const loadStorageData = async () => {
-            try {
-                // Initialize default admin if not exists
-                const storedUsers = await AsyncStorage.getItem('@all_users');
-                let users = storedUsers ? JSON.parse(storedUsers) : [];
-
-                const adminEmail = 'admin@vau.ac.lk';
-                const hasAdmin = users.some(u => u.email.toLowerCase() === adminEmail.toLowerCase());
-
-                if (!hasAdmin) {
-                    const defaultAdmin = {
-                        id: 'admin_1',
-                        name: 'System Admin',
-                        email: adminEmail,
-                        password: 'Admin123',
-                        role: 'admin',
-                        image: null
-                    };
-                    users.push(defaultAdmin);
-                    await AsyncStorage.setItem('@all_users', JSON.stringify(users));
-                }
-
-                const storedUser = await AsyncStorage.getItem('@user');
-                if (storedUser) {
-                    setUser(JSON.parse(storedUser));
-                }
-            } catch (e) {
-                console.error('Failed to load storage data', e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         loadStorageData();
     }, []);
+
+    // Check for preserved session
+    const loadStorageData = async () => {
+        try {
+            const storedAllUsers = await AsyncStorage.getItem('@all_users');
+            if (!storedAllUsers) {
+                // If empty, save the admin in an ARRAY [ ]
+                await AsyncStorage.setItem('@all_users', JSON.stringify([defaultAdmin]));
+            }
+
+            const storedUser = await AsyncStorage.getItem('@user');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        }
+        catch (e) {
+            console.error('Failed to load storage data', e);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
 
     const login = async (email, password) => {
         try {
@@ -51,7 +48,7 @@ export const AuthProvider = ({ children }) => {
             const users = storedUsers ? JSON.parse(storedUsers) : [];
 
             // Find user by email (case-insensitive)
-            const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+            const existingUser = users.find(u => u.email === email);
 
             if (!existingUser) {
                 return { success: false, message: 'No account found with this email. Please sign up.' };
@@ -77,13 +74,11 @@ export const AuthProvider = ({ children }) => {
             let users = storedUsers ? JSON.parse(storedUsers) : [];
 
             // Check if email already exists
-            if (users.some(u => u.email.toLowerCase() === userData.email.toLowerCase())) {
+            if (users.some(u => u.email === userData)) {
                 return { success: false, message: 'An account with this email already exists.' };
             }
 
-            // Check if admin email for the first time
-            const role = userData.email.toLowerCase() === 'admin@vau.ac.lk' ? 'admin' : 'student';
-            const newUser = { ...userData, role };
+            const newUser = { ...userData, role: 'student' };
 
             // Add new user
             users.push(newUser);
@@ -101,19 +96,23 @@ export const AuthProvider = ({ children }) => {
 
     const updateUser = async (updatedData) => {
         try {
+            const storedUsers = await AsyncStorage.getItem('@all_users');
+            let users = storedUsers ? JSON.parse(storedUsers) : [];
+
+            // Check if email already exists (if email is being changed)
+            if (updatedData.email && updatedData.email !== user.email) {
+                const emailExists = users.some(u => u.email === updatedData.email);
+                if (emailExists) {
+                    return { success: false, message: 'Email already in use' };
+                }
+            }
+
             const newUser = { ...user, ...updatedData };
             await AsyncStorage.setItem('@user', JSON.stringify(newUser));
 
             // Also update in all_users registry
-            const storedUsers = await AsyncStorage.getItem('@all_users');
-            if (storedUsers) {
-                let users = JSON.parse(storedUsers);
-                const idx = users.findIndex(u => u.email === user.email);
-                if (idx !== -1) {
-                    users[idx] = newUser;
-                    await AsyncStorage.setItem('@all_users', JSON.stringify(users));
-                }
-            }
+            const updatedUsers = users.map(u => u.email === user.email ? newUser : u);
+            await AsyncStorage.setItem('@all_users', JSON.stringify(updatedUsers));
 
             setUser(newUser);
             return { success: true };

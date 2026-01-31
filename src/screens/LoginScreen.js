@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -24,6 +24,7 @@ const LoginScreen = () => {
     const handleSubmit = async () => {
         setError('');
 
+        //registration validation
         if (!isLogin && !name) {
             setError('Please enter your full name');
             return;
@@ -34,7 +35,7 @@ const LoginScreen = () => {
             return;
         }
 
-        if (!email.toLowerCase().endsWith('@vau.ac.lk')) {
+        if (!email.endsWith('@vau.ac.lk')) {
             setError('Please use your university email (@vau.ac.lk)');
             return;
         }
@@ -66,7 +67,7 @@ const LoginScreen = () => {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior='height'
                 style={[styles.container, { backgroundColor: theme.colors.background }]}
             >
                 <ScrollView

@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';

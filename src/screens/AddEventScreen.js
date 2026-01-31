@@ -260,8 +260,8 @@ const AddEventScreen = ({ route, navigation }) => {
                                     <DateTimePicker
                                         value={date}
                                         mode="date"
-                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                        onChange={(event, selectedDate) => {
+                                        display='default'
+                                        onChange={(selectedDate) => {
                                             setShowDatePicker(false);
                                             if (selectedDate) setDate(selectedDate);
                                         }}
@@ -337,7 +337,7 @@ const AddEventScreen = ({ route, navigation }) => {
                                 value={startTime}
                                 mode="time"
                                 display="default"
-                                onChange={(event, selectedTime) => {
+                                onChange={(selectedTime) => {
                                     setShowStartTimePicker(false);
                                     if (selectedTime) setStartTime(selectedTime);
                                 }}
@@ -349,7 +349,7 @@ const AddEventScreen = ({ route, navigation }) => {
                                 value={endTime}
                                 mode="time"
                                 display="default"
-                                onChange={(event, selectedTime) => {
+                                onChange={(selectedTime) => {
                                     setShowEndTimePicker(false);
                                     if (selectedTime) setEndTime(selectedTime);
                                 }}

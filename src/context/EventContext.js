@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EVENTS as initialData } from '../data/dummyData';
 
@@ -34,11 +34,13 @@ export const EventProvider = ({ children }) => {
             currentRegistered.forEach(event => {
                 if (event.date < today) {
                     // Check if already in completed to avoid duplicates
+                    //ce mean completed event
                     if (!currentCompleted.some(ce => ce.id === event.id)) {
                         currentCompleted.push(event);
                         newlyCompleted = true;
                     }
-                } else {
+                }
+                else {
                     stillActive.push(event);
                 }
             });
@@ -70,6 +72,7 @@ export const EventProvider = ({ children }) => {
     const deleteEvent = async (id) => {
         try {
             setEvents(prev => {
+                //e is event
                 const updated = prev.filter(e => e.id !== id);
                 AsyncStorage.setItem('@events', JSON.stringify(updated));
                 return updated;
