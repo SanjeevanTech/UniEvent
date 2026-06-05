@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEvents } from '../context/EventContext';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 const AddEventScreen = ({ route, navigation }) => {
     const editEvent = route.params?.event;
@@ -45,6 +46,27 @@ const AddEventScreen = ({ route, navigation }) => {
     const [title, setTitle] = useState(editEvent?.title || '');
     const [date, setDate] = useState(editEvent?.date ? new Date(editEvent.date) : new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [image, setImage] = useState(editEvent?.image || null);
+
+    const pickEventImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to select event posters.');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [16, 9],
+            quality: 0.5,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            setImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+        }
+    };
 
     // Time States
     const [startTime, setStartTime] = useState(editEvent ? parseTime(editEvent.time) : new Date());
@@ -69,6 +91,7 @@ const AddEventScreen = ({ route, navigation }) => {
             setEndTime(parseTime(editEvent.time, true));
             setLocation(editEvent.location || '');
             setDescription(editEvent.description || '');
+            setImage(editEvent.image || null);
 
             if (!availableTypes.includes(editEvent.type)) {
                 setIsCustomType(true);
@@ -85,6 +108,7 @@ const AddEventScreen = ({ route, navigation }) => {
             setEndTime(new Date(new Date().setHours(new Date().getHours() + 1)));
             setLocation('');
             setDescription('');
+            setImage(null);
             setType('Workshop');
             setIsCustomType(false);
             setCustomTypeName('');
@@ -107,7 +131,8 @@ const AddEventScreen = ({ route, navigation }) => {
             (editEvent.time.includes(' - ') ? currentTimeString !== editEvent.time : formattedStartTime !== editEvent.time) ||
             location.trim() !== editEvent.location ||
             description.trim() !== editEvent.description ||
-            currentType !== editEvent.type
+            currentType !== editEvent.type ||
+            image !== editEvent.image
         );
     };
 
@@ -155,7 +180,7 @@ const AddEventScreen = ({ route, navigation }) => {
             location,
             description,
             type: isCustomType ? (customTypeName || 'Other') : type,
-            image: editEvent?.image || null,
+            image: image,
         };
 
         const clearForm = () => {
@@ -165,6 +190,7 @@ const AddEventScreen = ({ route, navigation }) => {
             setEndTime(new Date());
             setLocation('');
             setDescription('');
+            setImage(null);
             setType('Workshop');
             setIsCustomType(false);
             setCustomTypeName('');
@@ -398,6 +424,31 @@ const AddEventScreen = ({ route, navigation }) => {
                             />
                         )}
 
+                        <Text style={[styles.label, { color: theme.colors.text }]}>Event Banner Poster</Text>
+                        <View style={styles.imagePickerWrapper}>
+                            {image ? (
+                                <View style={styles.bannerPreviewContainer}>
+                                    <Image source={{ uri: image }} style={styles.bannerPreview} resizeMode="cover" />
+                                    <TouchableOpacity 
+                                        style={styles.removeBannerButton} 
+                                        onPress={() => setImage(null)}
+                                    >
+                                        <Ionicons name="trash-outline" size={18} color="#fff" />
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <TouchableOpacity 
+                                    style={[styles.bannerPlaceholder, { borderColor: theme.colors.border }]} 
+                                    onPress={pickEventImage}
+                                >
+                                    <Ionicons name="image-outline" size={36} color={theme.colors.primary} />
+                                    <Text style={[styles.bannerPlaceholderText, { color: theme.colors.textSecondary }]}>
+                                        Select Event Poster (16:9)
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
                         <Text style={[styles.label, { color: theme.colors.text }]}>Description</Text>
                         <TextInput
                             style={[styles.input, styles.textArea, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
@@ -531,6 +582,43 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    imagePickerWrapper: {
+        marginBottom: 20,
+        width: '100%',
+    },
+    bannerPreviewContainer: {
+        width: '100%',
+        height: 180,
+        borderRadius: 10,
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    bannerPreview: {
+        width: '100%',
+        height: '100%',
+    },
+    removeBannerButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        padding: 8,
+        borderRadius: 20,
+    },
+    bannerPlaceholder: {
+        width: '100%',
+        height: 180,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+    },
+    bannerPlaceholderText: {
+        fontSize: 14,
+        fontWeight: '500',
     },
 });
 

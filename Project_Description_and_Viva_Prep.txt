@@ -1,0 +1,65 @@
+# UniEvent - Project Description & Viva Preparation
+
+## 1. Project Overview
+**UniEvent** is a modern, cross-platform mobile application developed using **React Native and Expo**. It is specifically designed for university environments to bridge the gap between event organizers (Admins) and students (Users). The app provides a centralized platform to discover, manage, and register for campus activities ranging from workshops and seminars to sports meets and hackathons.
+
+### Key Features:
+- **Role-Based Access**: Specialized interfaces for Students and Administrators.
+- **Dynamic Event Management**: Live updates for event listings, registrations, and modifications.
+- **Theming System**: Full support for Light and Dark modes with a premium aesthetic.
+- **User Profiles**: Personalized dashboards showing registration history and activity stats.
+- **Notifications**: In-app tray for important event updates and reminders.
+
+---
+
+## 2. Screen-by-Screen Breakdown
+
+### A. Login Screen
+- **Purpose**: Authenticates users and determines their role (Admin or Student).
+- **Functionality**: Users enter their email and password. Upon successful login, the app redirects to the main dashboard.
+- **Key Code Logic**: Uses `AuthContext` to validate credentials and save the user session locally.
+
+### B. Home Screen (Explore)
+- **Purpose**: The primary dashboard for viewing all available events.
+- **Functionality**: 
+  - Displays event cards with titles, dates, locations, and images.
+  - Features a notification tray for recent updates.
+  - **Admin View**: Includes "Edit" (pencil) and "Delete" (trash) buttons directly on event cards.
+  - **Sync Feature**: Allows admins to reset data back to the default state.
+
+### C. Event Details Screen
+- **Purpose**: Provides comprehensive information about a specific event.
+- **Functionality**: 
+  - Shows event description, organizer details, and full location.
+  - **Student View**: Features a "Register Now" button.
+  - **Admin View**: Provides options to modify the event details.
+
+### D. Add/Edit Event Screen (Admin Only)
+- **Purpose**: A management form for event creation and modification.
+- **Functionality**: Admins can input event title, type, date, time, location, and description. It also supports adding image URLs for event posters.
+
+### E. Profile Screen
+- **Purpose**: Personal management and application settings.
+- **Functionality**:
+  - **User Info**: Displays name, email, and a personalized avatar.
+  - **Activity Stats**: Shows the count of "Registered" vs. "Completed" events.
+  - **My Activity**: A modal listing all joined events with an option to unregister.
+  - **Preferences**: Toggle for Dark Mode and "Reset to Defaults".
+  - **Account Actions**: Edit profile details (name/email/image) and Logout.
+
+---
+
+## 3. Simple Code Logic Explanation
+
+### State Management (Context API)
+Instead of passing data through every single component, I used **React Context**:
+1. **AuthContext**: Manages login status, user roles, and profile updates.
+2. **EventContext**: Centralized "database" for all events. It handles adding, deleting, and registering for events.
+3. **ThemeContext**: Controls the look and feel (colors, backgrounds) of the entire app.
+
+### Navigation
+The app uses **React Navigation**:
+- **Stack Navigator**: Used for the flow between Home and Event Details (where one screen slides over another).
+- **Bottom Tab Navigator**: Provides quick access to 'Home', 'Post' (for Admins), and 'Profile'.
+
+

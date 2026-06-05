@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useEvents } from '../context/EventContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 
 
 const ProfileScreen = () => {
@@ -35,6 +36,26 @@ const ProfileScreen = () => {
     const [editedName, setEditedName] = useState(user?.name || '');
     const [editedEmail, setEditedEmail] = useState(user?.email || '');
     const [editedImage, setEditedImage] = useState(user?.image || '');
+
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to upload profile photos.');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.4,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            setEditedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+        }
+    };
 
     const handleLogout = () => {
         Alert.alert(
@@ -121,7 +142,12 @@ const ProfileScreen = () => {
                     </View>
                     <TouchableOpacity
                         style={[styles.editBadge, { backgroundColor: theme.colors.primary }]}
-                        onPress={() => setEditModalVisible(true)}
+                        onPress={() => {
+                            setEditedName(user?.name || '');
+                            setEditedEmail(user?.email || '');
+                            setEditedImage(user?.image || '');
+                            setEditModalVisible(true);
+                        }}
                     >
                         <Ionicons name="pencil" size={16} color="#fff" />
                     </TouchableOpacity>
@@ -240,7 +266,12 @@ const ProfileScreen = () => {
                         icon="person-outline"
                         title="Edit Profile"
                         type="button"
-                        onPress={() => setEditModalVisible(true)}
+                        onPress={() => {
+                            setEditedName(user?.name || '');
+                            setEditedEmail(user?.email || '');
+                            setEditedImage(user?.image || '');
+                            setEditModalVisible(true);
+                        }}
                         style={{ marginTop: 10 }}
                     />
                     <SettingItem
@@ -312,15 +343,27 @@ const ProfileScreen = () => {
                                         />
                                     </View>
 
-                                    <View style={styles.inputGroup}>
-                                        <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Profile Image URL</Text>
-                                        <TextInput
-                                            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
-                                            value={editedImage}
-                                            onChangeText={setEditedImage}
-                                            placeholder="https://example.com/image.jpg"
-                                            placeholderTextColor={theme.colors.textSecondary}
-                                        />
+                                    <View style={styles.imagePickerContainer}>
+                                        <Text style={[styles.inputLabel, { color: theme.colors.textSecondary, alignSelf: 'flex-start' }]}>Profile Photo</Text>
+                                        <View style={styles.modalAvatarWrapper}>
+                                            <View style={styles.modalImageWrapper}>
+                                                {editedImage ? (
+                                                    <Image source={{ uri: editedImage }} style={styles.modalAvatar} resizeMode="cover" />
+                                                ) : (
+                                                    <View style={[styles.modalAvatarPlaceholder, { backgroundColor: theme.colors.primary + '20' }]}>
+                                                        <Text style={[styles.modalInitialText, { color: theme.colors.primary }]}>
+                                                            {editedName ? editedName.charAt(0).toUpperCase() : 'U'}
+                                                        </Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                            <TouchableOpacity 
+                                                style={[styles.modalImagePickBadge, { backgroundColor: theme.colors.primary }]} 
+                                                onPress={pickImage}
+                                            >
+                                                <Ionicons name="camera" size={16} color="#fff" />
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
 
                                     <TouchableOpacity
@@ -689,6 +732,61 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 8,
         backgroundColor: '#ff444415',
+    },
+    imagePickerContainer: {
+        alignItems: 'center',
+        marginBottom: 24,
+        width: '100%',
+    },
+    modalAvatarWrapper: {
+        position: 'relative',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginTop: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalImageWrapper: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#E1E1E1',
+    },
+    modalAvatar: {
+        width: 90,
+        height: 90,
+    },
+    modalAvatarPlaceholder: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalInitialText: {
+        fontSize: 36,
+        fontWeight: 'bold',
+    },
+    modalImagePickBadge: {
+        position: 'absolute',
+        bottom: 5,
+        right: 5,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#fff',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
     },
 });
 

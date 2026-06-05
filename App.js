@@ -55,9 +55,13 @@ const Navigation = () => {
 
 export default () => (
   <SafeAreaProvider>
-    <AuthProvider><ThemeProvider><EventProvider>
-      <AppStatusBar />
-      <Navigation />
-    </EventProvider></ThemeProvider></AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <EventProvider>
+          <AppStatusBar />
+          <Navigation />
+        </EventProvider>
+      </ThemeProvider>
+    </AuthProvider>
   </SafeAreaProvider>
 );

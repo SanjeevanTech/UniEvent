@@ -1,150 +1,159 @@
 import { createContext, useState, useContext, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EVENTS as initialData } from '../data/dummyData';
+import { api } from '../utils/api';
+import { useAuth } from './AuthContext';
 
 const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
-    const [events, setEvents] = useState(initialData);
+    const [events, setEvents] = useState([]);
     const [registeredEvents, setRegisteredEvents] = useState([]);
     const [completedEvents, setCompletedEvents] = useState([]);
+    const { user } = useAuth();
 
+    // Reload events/registrations whenever the user logs in or out
     useEffect(() => {
         loadEvents();
-    }, []);
+    }, [user]);
 
     const loadEvents = async () => {
         try {
-            const savedEvents = await AsyncStorage.getItem('@events');
-            if (savedEvents) {
-                setEvents(JSON.parse(savedEvents));
+            // 1. Fetch all events (Public)
+            const eventsRes = await api.get('/events');
+            if (eventsRes.success) {
+                setEvents(eventsRes.data || []);
             }
 
-            const savedRegistered = await AsyncStorage.getItem('@registered_events');
-            let currentRegistered = savedRegistered ? JSON.parse(savedRegistered) : [];
+            // 2. Fetch registrations (Private - only if user is logged in)
+            if (user) {
+                const registrationsRes = await api.get('/events/registrations/my');
+                if (registrationsRes.success) {
+                    const myRegistrations = registrationsRes.data || [];
+                    
+                    const today = new Date().toISOString().split('T')[0];
+                    const active = [];
+                    const completed = [];
 
-            const savedCompleted = await AsyncStorage.getItem('@completed_events');
-            let currentCompleted = savedCompleted ? JSON.parse(savedCompleted) : [];
+                    myRegistrations.forEach(event => {
+                        if (event.date < today) {
+                            completed.push(event);
+                        } else {
+                            active.push(event);
+                        }
+                    });
 
-            // Move past events from registered to completed
-            const today = new Date().toISOString().split('T')[0];
-            const stillActive = [];
-            let newlyCompleted = false;
-
-            currentRegistered.forEach(event => {
-                if (event.date < today) {
-                    // Check if already in completed to avoid duplicates
-                    //ce mean completed event
-                    if (!currentCompleted.some(ce => ce.id === event.id)) {
-                        currentCompleted.push(event);
-                        newlyCompleted = true;
-                    }
+                    setRegisteredEvents(active);
+                    setCompletedEvents(completed);
                 }
-                else {
-                    stillActive.push(event);
-                }
-            });
-
-            if (newlyCompleted) {
-                await AsyncStorage.setItem('@completed_events', JSON.stringify(currentCompleted));
-                await AsyncStorage.setItem('@registered_events', JSON.stringify(stillActive));
+            } else {
+                setRegisteredEvents([]);
+                setCompletedEvents([]);
             }
-
-            setRegisteredEvents(stillActive);
-            setCompletedEvents(currentCompleted);
         } catch (e) {
-            console.error('Failed to load events', e);
+            console.error('Failed to load events from backend', e);
         }
     };
 
     const addEvent = async (newEvent) => {
         try {
-            setEvents(prev => {
-                const updated = [newEvent, ...prev];
-                AsyncStorage.setItem('@events', JSON.stringify(updated));
-                return updated;
-            });
+            const response = await api.post('/events', newEvent);
+            if (response.success) {
+                const createdEvent = response.event || response.data?.event;
+                if (createdEvent) {
+                    setEvents(prev => [createdEvent, ...prev]);
+                } else {
+                    // Fallback to reload if response format differs
+                    await loadEvents();
+                }
+                return { success: true };
+            }
+            return { success: false, message: response.message };
         } catch (e) {
-            console.error('Failed to save event', e);
+            console.error('Failed to save event to backend', e);
+            return { success: false, message: 'Server error saving event' };
         }
     };
 
     const deleteEvent = async (id) => {
         try {
-            setEvents(prev => {
-                //e is event
-                const updated = prev.filter(e => e.id !== id);
-                AsyncStorage.setItem('@events', JSON.stringify(updated));
-                return updated;
-            });
-
-            setRegisteredEvents(prev => {
-                const updated = prev.filter(e => e.id !== id);
-                AsyncStorage.setItem('@registered_events', JSON.stringify(updated));
-                return updated;
-            });
+            const response = await api.delete(`/events/${id}`);
+            if (response.success) {
+                setEvents(prev => prev.filter(e => e.id !== id));
+                setRegisteredEvents(prev => prev.filter(e => e.id !== id));
+                setCompletedEvents(prev => prev.filter(e => e.id !== id));
+                return { success: true };
+            }
+            return { success: false, message: response.message };
         } catch (e) {
-            console.error('Failed to delete event', e);
+            console.error('Failed to delete event from backend', e);
+            return { success: false, message: 'Server error deleting event' };
         }
     };
 
     const updateEvent = async (id, updatedData) => {
         try {
-            setEvents(prev => {
-                const updated = prev.map(e => e.id === id ? { ...e, ...updatedData } : e);
-                AsyncStorage.setItem('@events', JSON.stringify(updated));
-                return updated;
-            });
-
-            setRegisteredEvents(prev => {
-                const updated = prev.map(e => e.id === id ? { ...e, ...updatedData } : e);
-                AsyncStorage.setItem('@registered_events', JSON.stringify(updated));
-                return updated;
-            });
+            const response = await api.put(`/events/${id}`, updatedData);
+            if (response.success) {
+                const updated = response.event || response.data?.event;
+                if (updated) {
+                    setEvents(prev => prev.map(e => e.id === id ? updated : e));
+                    setRegisteredEvents(prev => prev.map(e => e.id === id ? updated : e));
+                    setCompletedEvents(prev => prev.map(e => e.id === id ? updated : e));
+                } else {
+                    await loadEvents();
+                }
+                return { success: true };
+            }
+            return { success: false, message: response.message };
         } catch (e) {
-            console.error('Failed to update event', e);
+            console.error('Failed to update event in backend', e);
+            return { success: false, message: 'Server error updating event' };
         }
     };
 
     const registerForEvent = async (event) => {
         try {
-            if (registeredEvents.some(e => e.id === event.id)) {
-                return { success: false, message: 'Already registered!' };
+            const response = await api.post(`/events/${event.id}/register`);
+            if (response.success) {
+                // Add to local state
+                setRegisteredEvents(prev => {
+                    if (prev.some(e => e.id === event.id)) return prev;
+                    return [event, ...prev];
+                });
+                return { success: true, message: response.message || 'Successfully registered!' };
             }
-            const updated = [event, ...registeredEvents];
-            setRegisteredEvents(updated);
-            await AsyncStorage.setItem('@registered_events', JSON.stringify(updated));
-            return { success: true, message: 'Successfully registered!' };
+            return { success: false, message: response.message || 'Registration failed' };
         } catch (e) {
-            console.error('Failed to register', e);
-            return { success: false, message: 'Registration failed' };
+            console.error('Failed to register in backend', e);
+            return { success: false, message: 'Server error during registration' };
         }
     };
 
     const unregisterFromEvent = async (id) => {
         try {
-            const updated = registeredEvents.filter(e => e.id !== id);
-            setRegisteredEvents(updated);
-            await AsyncStorage.setItem('@registered_events', JSON.stringify(updated));
-            return { success: true, message: 'Removed from your events' };
+            const response = await api.delete(`/events/${id}/unregister`);
+            if (response.success) {
+                setRegisteredEvents(prev => prev.filter(e => e.id !== id));
+                setCompletedEvents(prev => prev.filter(e => e.id !== id));
+                return { success: true, message: response.message || 'Removed from your events' };
+            }
+            return { success: false, message: response.message || 'Failed to remove' };
         } catch (e) {
-            console.error('Failed to unregister', e);
-            return { success: false, message: 'Failed to remove' };
+            console.error('Failed to unregister in backend', e);
+            return { success: false, message: 'Server error during unregistration' };
         }
     };
 
     const resetEvents = async () => {
         try {
-            setEvents(initialData);
-            setRegisteredEvents([]);
-            setCompletedEvents([]);
-            await AsyncStorage.setItem('@events', JSON.stringify(initialData));
-            await AsyncStorage.setItem('@registered_events', JSON.stringify([]));
-            await AsyncStorage.setItem('@completed_events', JSON.stringify([]));
-            return { success: true, message: 'App reset to default data' };
+            const response = await api.post('/events/reset');
+            if (response.success) {
+                await loadEvents();
+                return { success: true, message: response.message || 'App reset to default data' };
+            }
+            return { success: false, message: response.message || 'Reset failed' };
         } catch (e) {
-            console.error('Failed to reset events', e);
-            return { success: false, message: 'Reset failed' };
+            console.error('Failed to reset events in backend', e);
+            return { success: false, message: 'Server error during reset' };
         }
     };
 

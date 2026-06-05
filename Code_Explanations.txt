@@ -1,0 +1,181 @@
+UniEvent Source Code Documentation
+================================================================================
+
+This document provides a detailed, line-by-line explanation of the core files in the UniEvent application. It is designed to help you understand the flow, logic, and architecture of the project.
+
+Table of Contents
+-----------------
+1. src/context/EventContext.js
+2. src/context/AuthContext.js
+3. src/context/ThemeContext.js
+4. App.js
+5. src/screens/LoginScreen.js
+
+================================================================================
+1. src/context/EventContext.js
+================================================================================
+
+### Overview
+This file serves as the "brain" for event management. It uses React Context to store event data globally, meaning any screen in the app can access or modify the event list. It handles:
+- Storing the list of events (`events`).
+- Tracking which events the user has joined (`registeredEvents`).
+- Archiving past events (`completedEvents`).
+- Saving everything to `AsyncStorage` so data persists after the app closes.
+
+### Line-by-Line Explanation
+
+**Imports**
+> `1: import { createContext, useState, useContext, useEffect } from 'react';`
+> `2: import AsyncStorage from '@react-native-async-storage/async-storage';`
+- Imports standard React hooks for state management and AsyncStorage for saving data permanently on the device.
+
+**Context Setup**
+> `5: const EventContext = createContext();`
+- Creates the context object that effectively acts as the "container" for our data.
+
+**The Provider (The Main Logic)**
+> `7: export const EventProvider = ({ children }) => {`
+- This component wraps the rest of the application. `children` represents all the app screens inside it.
+
+> `8:  const [events, setEvents] = useState(initialData);`
+> `9:  const [registeredEvents, setRegisteredEvents] = useState([]);`
+> `10: const [completedEvents, setCompletedEvents] = useState([]);`
+- Defines the three main pieces of state (data) the app tracks.
+
+**Initialization (Loading Data)**
+> `12: useEffect(() => { loadEvents(); }, []);`
+- This runs *once* when the app opens. It triggers the `loadEvents` function.
+
+> `16: const loadEvents = async () => { ... }`
+- This function reads from the phone's storage.
+- **CRITICAL LOGIC (Lines 29-49):** It checks the date of every registered event.
+  - If `event.date < today`: It moves the event from "Registered" to "Completed".
+  - It then saves these updated lists back to storage.
+
+**Core Actions**
+> `58: const addEvent = async (newEvent) => { ... }`
+- Adds a user-created event to the top of the list and saves it.
+
+> `70: const deleteEvent = async (id) => { ... }`
+- Removes an event from *both* the main list and the user's registered list to keep data consistent.
+
+> `88: const updateEvent = async (id, updatedData) => { ... }`
+- Finds an event by its ID and updates its details (like changing the time or description).
+
+> `106: const registerForEvent = async (event) => { ... }`
+- Checks if the user is already registered. If not, adds the event to their personal schedule.
+
+**Exposing the Data**
+> `148: return ( <EventContext.Provider value={{ ... }}> ...`
+- This passes all the variables (`events`, `registeredEvents`) and functions (`addEvent`, `register`) down to the rest of the app.
+
+================================================================================
+2. src/context/AuthContext.js
+================================================================================
+
+### Overview
+This file manages user identities. It handles Login, Sign Up, and Logout. It acts as a security guard, deciding who can enter the app and what they can see (Admin vs. Student).
+
+### Line-by-Line Explanation
+
+**State**
+> `7: const [user, setUser] = useState(null);`
+> `8: const [loading, setLoading] = useState(true);`
+- `user`: Holds the currently logged-in user's details.
+- `loading`: Is `true` while the app checks if you were already logged in from last time.
+
+**Startup Logic (useEffect)**
+> `11: // Check for preserved session`
+- Runs on startup.
+- **Admin Check (Lines 18-32):** It looks for an account with email `admin@vau.ac.lk`. If it doesn't exist (e.g., first run), it *automatically creates* a default Admin account (`password: Admin123`).
+- **Session Restore (Lines 34-37):** Checks if you used the app recently and logs you back in automatically.
+
+**Login Function**
+> `48: const login = async (email, password) => { ... }`
+- formatting user input against the list of stored users.
+- If it matches, it updates the `user` state and saves the session.
+
+**Register Function**
+> `74: const register = async (userData) => { ... }`
+- **Duplicate Check:** Prevents registering the same email twice.
+- **Role Assignment (Line 85):**
+  - If email is `admin@vau.ac.lk` -> Role = 'admin'
+  - Any other email -> Role = 'student'
+- Automatically logs the user in after a successful sign-up.
+
+================================================================================
+3. src/context/ThemeContext.js
+================================================================================
+
+### Overview
+A simple context that handles Light Mode vs. Dark Mode.
+
+### Line-by-Line Explanation
+
+> `7: const [isDarkMode, setIsDarkMode] = useState(false);`
+- The switch that decides the mode. Default is Light (`false`).
+
+> `24: const toggleTheme = async () => { ... }`
+- Flips the switch (true <-> false) and saves the preference to storage so the app remembers it next time.
+
+> `34: const theme = { ... }`
+- Defines the color palette.
+- `background`: `#121212` (Dark) vs `#ffffff` (Light).
+- This object is passed to every screen so they know what colors to paint themselves.
+
+================================================================================
+4. App.js
+================================================================================
+
+### Overview
+The root files. It sets up the Navigation structure (How you move from screen to screen).
+
+### Line-by-Line Explanation
+
+**Setup**
+> `19: const Stack = createNativeStackNavigator(), Tab = createBottomTabNavigator();`
+- Initializes the two navigation styles:
+  - **Stack:** Pushing screens on top of each other (like opening an email).
+  - **Tab:** The bottom bar (Home, Add, Profile).
+
+**Navigation Logic**
+> `28: const Navigation = () => { ... }`
+- **Loading Screen (Line 31):** Shows a spinner while `AuthContext` checks if you are logged in.
+- **Login Check (Lines 35-37):**
+  - If `!user`: Show **LoginScreen**.
+  - If `user`: Show **Tab Navigator** (The main app).
+
+**Role-Based Tabs**
+> `49: {user.role === 'admin' && <Tab.Screen name="AddEvent" ... />}`
+- This line hides the "Post Event" tab from normal students. Only Admins can see it.
+
+**Final Wrap**
+> `59: <AuthProvider><ThemeProvider><EventProvider>`
+- Wraps the entire app in the data providers so every screen has access to User, Theme, and Event data.
+
+================================================================================
+5. src/screens/LoginScreen.js
+================================================================================
+
+### Overview
+Handles user entry. It intelligently swaps between a "Login" form and a "Sign Up" form on the same screen.
+
+### Line-by-Line Explanation
+
+**State Variables**
+> `9: const [isLogin, setIsLogin] = useState(true);`
+- Keeps track of whether the user is trying to Login or Sign Up. Toggling this changes the form fields (hiding/showing the Name field).
+
+**Validation**
+> `37: if (!email.toLowerCase().endsWith('@vau.ac.lk'))`
+- **University Restriction:** Strictly forces users to use a `@vau.ac.lk` email address.
+
+> `42: if (!validatePassword(password))`
+- Enforces strong passwords (8 chars + 1 Uppercase + 1 Number).
+
+**The Form (Render)**
+> `96: {!isLogin && ( ... Name Input ... )}`
+- Uses the `isLogin` variable to purely conditionally render the "Full Name" input field.
+
+> `132: <TouchableOpacity ... onPress={() => setShowPassword(!showPassword)}>`
+- The "Eye" icon logic to show/hide the password text.
